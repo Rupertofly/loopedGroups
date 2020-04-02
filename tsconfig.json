@@ -10,8 +10,9 @@
         "sourceMap": true,
         "emitDecoratorMetadata": true,
         "experimentalDecorators": true,
-        "lib": ["ESNext", "ES2019", "DOM"]
+        "lib": ["ESNext", "ES2019", "DOM"],
+        "declaration": true
     },
     "typeAcquisition": { "enable": true },
-    "exclude": ["node_modules", "test"]
+    "include": ["src"]
 }
