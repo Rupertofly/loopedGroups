@@ -1,4 +1,5 @@
-import { Voronoi } from 'd3-delaunay';
+import { Voronoi, Delaunay } from 'd3-delaunay';
+
 type extent = [number, number, number, number];
 function regioncode(x: number, y: number, [xmin, ymin, xmax, ymax]: extent) {
     return (
@@ -6,7 +7,7 @@ function regioncode(x: number, y: number, [xmin, ymin, xmax, ymax]: extent) {
         (y < ymin ? 0b0100 : y > ymax ? 0b1000 : 0b0000)
     );
 }
-function _clipSegment(
+function clipSegment(
     x0: number,
     y0: number,
     x1: number,
@@ -35,20 +36,26 @@ function _clipSegment(
     }
 }
 
-function _renderSegment(x0: number, y0: number, x1: number, y1: number) {
+function renderSegment(
+    x0: number,
+    y0: number,
+    x1: number,
+    y1: number,
+    ex: extent
+) {
     let context: any;
 
-    const c0 = this._regioncode(x0, y0);
-    const c1 = this._regioncode(x1, y1);
+    const c0 = regioncode(x0, y0, ex);
+    const c1 = regioncode(x1, y1, ex);
 
     if (c0 === 0 && c1 === 0) {
         return [x0, y0, x1, y1];
     }
-    const S = this._clipSegment(x0, y0, x1, y1, c0, c1);
+    const S = clipSegment(x0, y0, x1, y1, c0, c1, ex);
 
     if (S) return S as [number, number, number, number];
 }
-function _project(x0: number, y0: number, vx: number, vy: number, ex: extent) {
+function project(x0: number, y0: number, vx: number, vy: number, ex: extent) {
     const [xmin, ymin, xmax, ymax] = ex;
     let t = Infinity,
         c: number,
@@ -77,13 +84,14 @@ function _project(x0: number, y0: number, vx: number, vy: number, ex: extent) {
     return [x, y];
 }
 
-function render(vor: Voronoi<any>) {
+export function* render(vor: Voronoi<any>) {
     const {
         delaunay: { halfedges, inedges, hull: hll },
         circumcenters,
         vectors
     } = vor;
-    const hull = hll as any;
+    const hull = hll;
+    const ex: extent = [vor.xmin, vor.ymin, vor.xmax, vor.ymax];
 
     if ((hull as any).length <= 1) return null;
     for (let i = 0, n = halfedges.length; i < n; ++i) {
@@ -97,7 +105,7 @@ function render(vor: Voronoi<any>) {
         const xj = circumcenters[tj];
         const yj = circumcenters[tj + 1];
 
-        this._renderSegment(xi, yi, xj, yj);
+        yield renderSegment(xi, yi, xj, yj, ex);
     }
     let h0,
         h1 = hull[hull.length - 1];
@@ -108,8 +116,10 @@ function render(vor: Voronoi<any>) {
         const x = circumcenters[t];
         const y = circumcenters[t + 1];
         const v = h0 * 4;
-        const p = this._project(x, y, vectors[v + 2], vectors[v + 3]);
+        const p = project(x, y, vectors[v + 2], vectors[v + 3], ex);
 
-        if (p) this._renderSegment(x, y, p[0], p[1]);
+        if (p) yield renderSegment(x, y, p[0], p[1], ex);
     }
+
+    return null;
 }
