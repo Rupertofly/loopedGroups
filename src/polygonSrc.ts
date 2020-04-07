@@ -3,7 +3,7 @@ import { Voronoi, Delaunay } from 'd3-delaunay';
 type extent = [number, number, number, number];
 type point = [number, number];
 type line = [point, point];
-interface Edge {
+export interface Edge {
     line: line;
     left?: number;
     right?: number;
@@ -142,8 +142,8 @@ export function* render(vor: Voronoi<any>) {
 
         yield {
             line: renderSegment(xi, yi, xj, yj, ex),
-            left: triangles[i],
-            right: triangles[j]
+            left: triangles[j],
+            right: triangles[i]
         } as Edge;
     }
     let h0: number;
@@ -161,8 +161,8 @@ export function* render(vor: Voronoi<any>) {
         if (p)
             yield {
                 line: renderSegment(x, y, p[0], p[1], ex),
-                left: h0,
-                right: h1
+                left: h1,
+                right: h0
             };
     }
 

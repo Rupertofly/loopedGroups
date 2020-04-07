@@ -7,15 +7,19 @@
     "license": "MIT",
     "private": false,
     "devDependencies": {
+        "@babel/core": "^7.9.0",
         "@types/d3-delaunay": "^4.1.0",
+        "@types/victor": "^1.1.0",
         "@typescript-eslint/eslint-plugin": "^2.24.0",
         "@typescript-eslint/parser": "^2.24.0",
         "eslint": "^6.8.0",
         "eslint-config-prettier": "^6.10.0",
         "eslint-plugin-prettier": "^3.1.2",
         "eslint-plugin-tsdoc": "^0.2.3",
+        "parcel": "^1.12.4",
         "prettier": "^1.19.1",
-        "typescript": "^3.8.3"
+        "typescript": "^3.8.3",
+        "victor": "^1.1.0"
     },
     "dependencies": {
         "d3-delaunay": "^5.2.1"
@@ -24,5 +28,12 @@
         "useTabs": false,
         "singleQuote": true,
         "tabWidth": 4
+    },
+    "browserslist": [
+        "last 2 Chrome versions"
+    ],
+    "scripts": {
+        "test": "parcel serve test/test.html --out-dir test/dist",
+        "build": "tsc"
     }
 }
