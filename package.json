@@ -8,6 +8,8 @@
     "private": false,
     "devDependencies": {
         "@babel/core": "^7.9.0",
+        "@rupertofly/capture": "^0.9.4",
+        "@rupertofly/capture-client": "^1.1.1",
         "@types/d3-delaunay": "^4.1.0",
         "@types/victor": "^1.1.0",
         "@typescript-eslint/eslint-plugin": "^2.24.0",
