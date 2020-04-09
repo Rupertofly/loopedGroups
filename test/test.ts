@@ -1,16 +1,16 @@
 import { Extent, Line, Pt, Loop } from '../src/global';
 import * as d from 'd3-delaunay';
 import * as ge from '../src/getEdges';
-import { render } from '../src/polygonSrc';
+import { getEdges } from '../src/getEdges';
 import { Edge, Pt as pt } from '../src/global';
-import { HullSegmenter } from '../src/HullSegmenter';
+
 import * as CAP from '@rupertofly/capture-client';
 import Vic from 'victor';
 
 const pts: Pt[] = [];
 
-for (let i = 0; i < 64; i++) {
-    pts.push([100 + Math.random() * 300, 100 + Math.random() * 500]);
+for (let i = 0; i < 256; i++) {
+    pts.push([288 + Math.random() * 144, 568 + Math.random() * 144]);
 }
 let diag = d.Delaunay.from(pts);
 let nikPantis = diag.voronoi([5, 5, 715, 1275]);
@@ -117,9 +117,11 @@ document.body.append(cv);
 //     ctx.beginPath();
 //     ctx.fillRect(diag.points[i] - 4, diag.points[i + 1] - 4, 8, 8);
 // }
-let myPts = render(nikPantis);
+let myPts = getEdges(nikPantis);
+const myTris = diag.trianglePolygons();
 let startAgain = true;
 let frameCount = 0;
+let buildCount = -1;
 
 capClient.start({
     frameRate: 60,
@@ -129,12 +131,11 @@ capClient.start({
 });
 function renderFrame() {
     frameCount++;
-    ctx.fillStyle = '#00000001';
-
-    ctx.lineWidth = 6;
-    ctx.fillRect(0, 0, 1300, 1300);
+    ctx.fillStyle = '#00000000';
+    ctx.lineWidth = 8;
     if (startAgain) {
-        ctx.fillStyle = '#00000060';
+        buildCount++;
+        ctx.fillStyle = '#00000001';
         ctx.fillRect(0, 0, 1300, 1300);
         startAgain = false;
         diag = d.Delaunay.from(pts);
@@ -146,19 +147,26 @@ function renderFrame() {
 
             pts[i] = newPT;
         }
-        myPts = render(nikPantis);
+        myPts = getEdges(nikPantis);
     }
-    const nxt = myPts.next();
+    let count = 0;
 
-    if (nxt.done) startAgain = true;
-    const ed = nxt.value as Edge;
+    while (!startAgain && count < 24) {
+        count++;
+        const nxt = myPts.next();
 
-    if (ed) {
-        ctx.strokeStyle = `hsl(${frameCount % 360}deg, 87%, 40%)`;
-        ctx.beginPath();
-        ctx.moveTo(...ed.line[0]);
-        ctx.lineTo(...ed.line[1]);
-        ctx.stroke();
+        if (nxt.done) startAgain = true;
+        const ed = nxt.value as Edge;
+
+        if (ed) {
+            ctx.strokeStyle = `hsl(${(frameCount * 2) % 360}deg, 90%, ${
+                buildCount % 2 ? 60 : 20
+            }%)`;
+            ctx.beginPath();
+            ctx.moveTo(...ed.line[0]);
+            ctx.lineTo(...ed.line[1]);
+            ctx.stroke();
+        }
     }
     // for (const ed of render(nikPantis)) {
     //     ctx.strokeStyle = '#000000ff';

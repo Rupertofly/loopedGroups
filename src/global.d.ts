@@ -1,8 +1,8 @@
-export type Pt = [number, number];
-export type Line = [Pt, Pt];
-export type Loop = Pt[];
-export type Extent = [number, number, number, number];
-export interface Edge {
+export declare type Pt = [number, number];
+export declare type Line = [Pt, Pt];
+export declare type Loop = Pt[];
+export declare type Extent = [number, number, number, number];
+export declare interface Edge {
     line: Line;
     left?: number;
     right?: number;

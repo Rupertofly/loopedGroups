@@ -1,53 +1,134 @@
 import { Voronoi, Delaunay } from 'd3-delaunay';
-type pt = [number, number];
-type line = [pt, pt];
-interface Edge extends line {
-    left?: number;
-    right?: number;
+import { Extent, Line, Pt, Loop, Edge } from './global';
+import HullSegmenter from './HullSegmenter';
+function regioncode(x: number, y: number, [xmin, ymin, xmax, ymax]: Extent) {
+    return (
+        (x < xmin ? 0b0001 : x > xmax ? 0b0010 : 0b0000) |
+        (y < ymin ? 0b0100 : y > ymax ? 0b1000 : 0b0000)
+    );
 }
-export function getEdges<C>(diagram: Voronoi<C>, cells: C[]) {
-    const {
-        delaunay: { halfedges, inedges, hull },
-        circumcenters,
-        vectors
-    } = diagram;
+function clipSegment(
+    x0: number,
+    y0: number,
+    x1: number,
+    y1: number,
+    c0: number,
+    c1: number,
+    ex: Extent
+) {
+    const [xmin, ymin, xmax, ymax] = ex;
 
-    function _project(x0: number, y0: number, vx: number, vy: number) {
-        let t = Infinity;
-        let c: number;
+    while (true) {
+        if (c0 === 0 && c1 === 0) return [x0, y0, x1, y1];
+        if (c0 & c1) return null;
         let x: number;
         let y: number;
+        const c = c0 || c1;
 
-        if (vy < 0) {
-            // top
-            if (y0 <= diagram.ymin) return null;
-            if ((c = (diagram.ymin - y0) / vy) < t)
-                (y = diagram.ymin), (x = x0 + (t = c) * vx);
-        } else if (vy > 0) {
-            // bottom
-            if (y0 >= diagram.ymax) return null;
-            if ((c = (diagram.ymax - y0) / vy) < t)
-                (y = diagram.ymax), (x = x0 + (t = c) * vx);
+        if (c & 0b1000) {
+            x = x0 + ((x1 - x0) * (ymax - y0)) / (y1 - y0);
+            y = ymax;
+        } else if (c & 0b0100) {
+            x = x0 + ((x1 - x0) * (ymin - y0)) / (y1 - y0);
+            y = ymin;
+        } else if (c & 0b0010) {
+            y = y0 + ((y1 - y0) * (xmax - x0)) / (x1 - x0);
+            x = xmax;
+        } else {
+            y = y0 + ((y1 - y0) * (xmin - x0)) / (x1 - x0);
+            x = xmin;
         }
-        if (vx > 0) {
-            // right
-            if (x0 >= diagram.xmax) return null;
-            if ((c = (diagram.xmax - x0) / vx) < t)
-                (x = diagram.xmax), (y = y0 + (t = c) * vy);
-        } else if (vx < 0) {
-            // left
-            if (x0 <= diagram.xmin) return null;
-            if ((c = (diagram.xmin - x0) / vx) < t)
-                (x = diagram.xmin), (y = y0 + (t = c) * vy);
+        if (c0) {
+            x0 = x;
+            y0 = y;
+            c0 = regioncode(x0, y0, ex);
+        } else {
+            x1 = x;
+            y1 = y;
+            c1 = regioncode(x1, y1, ex);
         }
+    }
+}
 
-        return [x, y];
+function processLine(
+    x0: number,
+    y0: number,
+    x1: number,
+    y1: number,
+    ex: Extent
+) {
+    let context: any;
+
+    const c0 = regioncode(x0, y0, ex);
+    const c1 = regioncode(x1, y1, ex);
+
+    if (c0 === 0 && c1 === 0) {
+        return [
+            [x0, y0],
+            [x1, y1]
+        ] as Line;
+    }
+    const S = clipSegment(x0, y0, x1, y1, c0, c1, ex);
+
+    if (S)
+        return [
+            [S[0], S[1]],
+            [S[2], S[3]]
+        ] as Line;
+}
+function projectEdge(
+    x0: number,
+    y0: number,
+    vx: number,
+    vy: number,
+    ex: Extent
+) {
+    const [xmin, ymin, xmax, ymax] = ex;
+    let t = Infinity;
+    let c: number;
+    let x: number;
+    let y: number;
+
+    if (vy < 0) {
+        // top
+        if (y0 <= ymin) return null;
+        if ((c = (ymin - y0) / vy) < t) (y = ymin), (x = x0 + (t = c) * vx);
+    } else if (vy > 0) {
+        // bottom
+        if (y0 >= ymax) return null;
+        if ((c = (ymax - y0) / vy) < t) (y = ymax), (x = x0 + (t = c) * vx);
+    }
+    if (vx > 0) {
+        // right
+        if (x0 >= xmax) return null;
+        if ((c = (xmax - x0) / vx) < t) {
+            x = xmax;
+            y = y0 + (t = c) * vy;
+        }
+    } else if (vx < 0) {
+        // left
+        if (x0 <= xmin) return null;
+        if ((c = (xmin - x0) / vx) < t) {
+            x = xmin;
+            y = y0 + (t = c) * vy;
+        }
     }
 
-    const edges: Edge[] = [];
+    return [x, y];
+}
 
-    if ((hull as any).length <= 1) return null;
-    for (let i = 0; i < halfedges.length; ++i) {
+export function* getEdges(vor: Voronoi<any>): Generator<Edge, void, unknown> {
+    const {
+        delaunay: { halfedges, inedges, hull: hll, triangles },
+        circumcenters,
+        vectors
+    } = vor;
+    const hull: Float32Array = hll as any;
+    const extent: Extent = [vor.xmin, vor.ymin, vor.xmax, vor.ymax];
+    const hullSegmentSolver = new HullSegmenter(extent);
+
+    if (hull.length <= 1) return null;
+    for (let i = 0, n = halfedges.length; i < n; ++i) {
         const j = halfedges[i];
 
         if (j < i) continue;
@@ -57,40 +138,51 @@ export function getEdges<C>(diagram: Voronoi<C>, cells: C[]) {
         const yi = circumcenters[ti + 1];
         const xj = circumcenters[tj];
         const yj = circumcenters[tj + 1];
+        const edgeLine = processLine(xi, yi, xj, yj, extent);
 
-        edges.push(
-            Object.assign(
-                [
-                    [xi, yi],
-                    [xj, yj]
-                ] as line,
-                {
-                    left: j,
-                    right: i
-                }
-            )
-        );
-    }
-    let h0,
-        h1 = hull[(hull as any).length - 1];
+        if (edgeLine) {
+            const ed = {
+                line: edgeLine,
+                left: triangles[j],
+                right: triangles[i]
+            } as Edge;
 
-    for (let i = 0; i < (hull as any).length; ++i) {
-        (h0 = h1), (h1 = hull[i]);
-        const t = Math.floor(inedges[h1] / 3) * 2;
-        const x = circumcenters[t];
-        const y = circumcenters[t + 1];
-        const v = h0 * 4;
-        const p = _project(x, y, vectors[v + 2], vectors[v + 3]);
-
-        if (p) {
-            const ln = [
-                [x, y],
-                [p[0], p[1]]
-            ] as line;
-
-            edges.push(ln);
+            hullSegmentSolver.addEdge(ed);
+            yield ed;
         }
     }
+    let prevIndex: number;
+    let currentIndex = hull[hull.length - 1];
 
-    return edges;
+    for (let i = 0; i < hull.length; ++i) {
+        prevIndex = currentIndex;
+        currentIndex = hull[i];
+        const t = Math.floor(inedges[currentIndex] / 3) * 2;
+        const x = circumcenters[t];
+        const y = circumcenters[t + 1];
+        const v = prevIndex * 4;
+        const p = projectEdge(x, y, vectors[v + 2], vectors[v + 3], extent);
+
+        if (p) {
+            const edgeLine = processLine(x, y, p[0], p[1], extent);
+
+            if (edgeLine) {
+                const edge = {
+                    line: edgeLine,
+                    left: currentIndex,
+                    right: prevIndex
+                } as Edge;
+
+                hullSegmentSolver.addEdge(edge);
+                yield edge;
+            }
+        }
+    }
+    const eds = hullSegmentSolver.getHullSegments();
+
+    for (const ed of eds) {
+        yield ed;
+    }
+
+    return;
 }

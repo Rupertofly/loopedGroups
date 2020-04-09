@@ -1,5 +1,5 @@
-
 import GD from './GraphDiagram';
+import { Edge } from './global';
 function matchNum(a: number, b: number) {
     const EPSILON = 1e-9;
 
@@ -16,24 +16,18 @@ function matchPoint(a: point, b: point) {
 function matchPointHof(a: point) {
     return (b: cellEdge) => matchPoint(a, b[0]);
 }
-function orientEdge(
-    edge: GD.edge<CellPoint>,
-    type: string,
-    group: number
-): GD.edge<CellPoint> {
-    const { left, right } = edge;
+function flip(edge: Edge): Edge {
+    const { line } = edge;
+    const temp = edge.right;
+    const right = edge.left;
+    const left = temp;
 
-    if (right && right.type === type && right.group === group) {
+    return { line, left, right };
+}
+function orientEdge<U>(edge: Edge, test: (a: Edge) => boolean): Edge {
+    if (test(edge)) {
         // flip edge
-        const newEdge = Object.assign(
-            [edge[1], edge[0]] as GD.edge<CellPoint>,
-            {
-                left: right,
-                right: left
-            }
-        );
-
-        return newEdge;
+        return flip(edge);
     } else {
         return edge;
     }
