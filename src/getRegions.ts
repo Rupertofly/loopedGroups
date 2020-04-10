@@ -16,7 +16,7 @@ export function getRegions<T, U>(
         if (edge.isBoundary) continue;
         const { left, right } = edge;
 
-        if (getType(left) !== getType(right)) continue;
+        if (getType(edge.left) !== getType(edge.right)) continue;
         disjointSet.union(left, right);
     }
     const regionSets = disjointSet.groups();

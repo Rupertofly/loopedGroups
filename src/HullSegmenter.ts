@@ -19,6 +19,8 @@ const bundleEdges = (
         const ed = boundaryPoints[i];
 
         edges.push({
+            isBoundary: true,
+            left: undefined,
             right: st.after,
             line:
                 constantDim == 'x'

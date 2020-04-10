@@ -8,15 +8,11 @@
             "type": "chrome",
             "request": "launch",
             "name": "Launch Chrome against localhost",
-            "url": "http://localhost:1234",
+            "url": "http://localhost:1234/test.html",
             "webRoot": "${workspaceFolder}",
             "sourceMapPathOverrides": {
-                "webpack:///./*": "${webRoot}/*",
-                "webpack:///src/*": "${webRoot}/*",
-                "webpack:///*": "*",
-                "webpack:///./~/*": "${webRoot}/node_modules/*",
-                "meteor://💻app/*": "${webRoot}/*",
-                "../*": "${webRoot}/test/*"
+                "../src/*": "${webRoot}/src/*",
+                "../node_modules/*": "${webRoot}/node_modules/*"
             }
         }
     ]

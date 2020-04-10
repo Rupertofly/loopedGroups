@@ -144,7 +144,8 @@ export function* getEdges(vor: Voronoi<any>): Generator<Edge, void, unknown> {
             const ed = {
                 line: edgeLine,
                 left: Math.floor(triangles[j] / 2),
-                right: Math.floor(triangles[i] / 2)
+                right: Math.floor(triangles[i] / 2),
+                isBoundary: false
             } as Edge;
 
             hullSegmentSolver.addEdge(ed);
@@ -170,7 +171,8 @@ export function* getEdges(vor: Voronoi<any>): Generator<Edge, void, unknown> {
                 const edge = {
                     line: edgeLine,
                     left: Math.floor(currentIndex / 2),
-                    right: Math.floor(prevIndex / 2)
+                    right: Math.floor(prevIndex / 2),
+                    isBoundary: false
                 } as Edge;
 
                 hullSegmentSolver.addEdge(edge);

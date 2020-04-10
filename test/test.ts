@@ -21,7 +21,8 @@ for (let i = 0; i < 256; i++) {
 }
 let diag: d.Delaunay<Cell> = d.Delaunay.from(pts.map(d => d.pt));
 let nikPantis = diag.voronoi([5, 5, 715, 1275]);
-const regions = getRegions<any, number>(pts, nikPantis, (d, i) => pts[i].type);
+let regions = getRegions<any, number>(pts, nikPantis, (d, i, a) => a[i].type);
+
 const cv = document.createElement('canvas');
 
 cv.width = 720;
@@ -156,9 +157,16 @@ function renderFrame() {
 
             pts[i].pt = newPT;
         }
+        regions = getRegions<any, number>(
+            pts,
+            nikPantis,
+            (d, i, a) => a[i].type
+        );
         myPts = getEdges(nikPantis);
     }
     let count = 0;
+
+    if (frameCount === 300) console.log(regions);
 
     while (!startAgain && count < 64) {
         count++;
