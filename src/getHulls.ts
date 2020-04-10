@@ -17,12 +17,12 @@ function matchPointHof(a: point) {
     return (b: cellEdge) => matchPoint(a, b[0]);
 }
 function flip(edge: Edge): Edge {
-    const { line } = edge;
+    const { line, isBoundary } = edge;
     const temp = edge.right;
     const right = edge.left;
     const left = temp;
 
-    return { line, left, right };
+    return { line, left, right, isBoundary };
 }
 function orientEdge<U>(edge: Edge, test: (a: Edge) => boolean): Edge {
     if (test(edge)) {

@@ -3,23 +3,31 @@ import * as d from 'd3-delaunay';
 import * as ge from '../src/getEdges';
 import { getEdges } from '../src/getEdges';
 import { Edge, Pt as pt } from '../src/global';
+import { getRegions } from '../src/getRegions';
 
 import * as CAP from '@rupertofly/capture-client';
 import Vic from 'victor';
-
-const pts: Pt[] = [];
+interface Cell {
+    pt: Pt;
+    type: number;
+}
+const pts: Cell[] = [];
 
 for (let i = 0; i < 256; i++) {
-    pts.push([288 + Math.random() * 144, 568 + Math.random() * 144]);
+    pts.push({
+        pt: [144 + Math.random() * 288, 268 + Math.random() * 444],
+        type: Math.floor(Math.random() * 2)
+    });
 }
-let diag = d.Delaunay.from(pts);
+let diag: d.Delaunay<Cell> = d.Delaunay.from(pts.map(d => d.pt));
 let nikPantis = diag.voronoi([5, 5, 715, 1275]);
+const regions = getRegions<any, number>(pts, nikPantis, (d, i) => pts[i].type);
 const cv = document.createElement('canvas');
 
 cv.width = 720;
 cv.height = 1280;
 const ctx = cv.getContext('2d');
-const capClient = new CAP.CaptureClient(4646, cv);
+// const capClient = new CAP.CaptureClient(4646, cv);
 
 ctx.fillStyle = '#000000';
 
@@ -123,42 +131,46 @@ let startAgain = true;
 let frameCount = 0;
 let buildCount = -1;
 
-capClient.start({
-    frameRate: 60,
-    lengthIsFrames: true,
-    maxLength: 3000,
-    name: 'grid'
-});
+// capClient.start({
+//     frameRate: 60,
+//     lengthIsFrames: true,
+//     maxLength: 3000,
+//     name: 'grid'
+// });
 function renderFrame() {
     frameCount++;
     ctx.fillStyle = '#00000000';
     ctx.lineWidth = 8;
+    ctx.lineCap = 'round';
     if (startAgain) {
         buildCount++;
         ctx.fillStyle = '#00000001';
         ctx.fillRect(0, 0, 1300, 1300);
         startAgain = false;
-        diag = d.Delaunay.from(pts);
+        diag = d.Delaunay.from(pts.map(d => d.pt));
         nikPantis = diag.voronoi([5, 5, 715, 1275]);
         for (let i = 0; i < pts.length; i++) {
             const pg = nikPantis.cellPolygon(i);
             const cx = centroid(pg as pt[]);
-            const newPT = pts[i].map((v, j) => v + (cx[j] - v)) as pt;
+            const newPT = pts[i].pt.map((v, j) => v + (cx[j] - v)) as pt;
 
-            pts[i] = newPT;
+            pts[i].pt = newPT;
         }
         myPts = getEdges(nikPantis);
     }
     let count = 0;
 
-    while (!startAgain && count < 24) {
+    while (!startAgain && count < 64) {
         count++;
         const nxt = myPts.next();
 
         if (nxt.done) startAgain = true;
         const ed = nxt.value as Edge;
 
-        if (ed) {
+        if (
+            ed &&
+            (ed.isBoundary || pts[ed.left]?.type !== pts[ed.right]?.type)
+        ) {
             ctx.strokeStyle = `hsl(${(frameCount * 2) % 360}deg, 90%, ${
                 buildCount % 2 ? 60 : 20
             }%)`;
@@ -205,6 +217,6 @@ function renderFrame() {
     //         // ctx.stroke();
     //     }
     // }
-    capClient.capture().then(() => window.requestAnimationFrame(renderFrame));
+    window.requestAnimationFrame(renderFrame);
 }
 renderFrame();
