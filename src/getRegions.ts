@@ -12,12 +12,11 @@ export function getRegions<T, U>(
     const disjointSet = new DisjointSet(iArr, d => d);
     const getType = (n: number) => acc(list[n], n, list);
 
-    for (const edge of getEdges(graph)) {
-        if (edge.isBoundary) continue;
-        const { left, right } = edge;
-
-        if (getType(edge.left) !== getType(edge.right)) continue;
-        disjointSet.union(left, right);
+    for (const i of iArr) {
+        for (const j of graph.delaunay.neighbors(i)) {
+            if (j < i) continue;
+            if (getType(i) === getType(j)) disjointSet.union(i, j);
+        }
     }
     const regionSets = disjointSet.groups();
     const outputMap = new Map<U, Region<number, U>[]>();

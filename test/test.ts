@@ -190,7 +190,6 @@ function renderFrame() {
         regions.forEach(({ members }, i) => {
             ctx.fillStyle = `hsla(${type * 120}deg, ${50 +
                 i * (50 / regionNo)}%, 60%,100)`;
-            ctx.fillStyle = 'white';
             members.forEach(n => {
                 ctx.beginPath();
                 const pg = nikPantis.cellPolygon(n);
