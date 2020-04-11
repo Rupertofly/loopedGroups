@@ -140,13 +140,10 @@ let buildCount = -1;
 // });
 function renderFrame() {
     frameCount++;
-    ctx.fillStyle = '#00000000';
     ctx.lineWidth = 8;
     ctx.lineCap = 'round';
     if (startAgain) {
         buildCount++;
-        ctx.fillStyle = '#00000001';
-        ctx.fillRect(0, 0, 1300, 1300);
         startAgain = false;
         diag = d.Delaunay.from(pts.map(d => d.pt));
         nikPantis = diag.voronoi([5, 5, 715, 1275]);
@@ -162,12 +159,51 @@ function renderFrame() {
             nikPantis,
             (d, i, a) => a[i].type
         );
+
         myPts = getEdges(nikPantis);
+        regions.forEach((regions, type) => {
+            const regionNo = regions.length;
+
+            regions.forEach(({ members }, i) => {
+                ctx.fillStyle = `hsla(${type * 120}deg, ${50 +
+                    i * (50 / regionNo)}%, 60%,100)`;
+                ctx.fillStyle = 'white';
+                members.forEach(n => {
+                    ctx.beginPath();
+                    const pg = nikPantis.cellPolygon(n);
+
+                    ctx.moveTo(...(pg.shift() as Pt));
+                    pg.map((p: Pt) => ctx.lineTo(...p));
+                    ctx.closePath();
+                    ctx.fill();
+                    ctx.stroke();
+                });
+            });
+        });
     }
     let count = 0;
 
-    if (frameCount === 300) console.log(regions);
+    // debugger;
+    regions.forEach((regions, type) => {
+        const regionNo = regions.length;
 
+        regions.forEach(({ members }, i) => {
+            ctx.fillStyle = `hsla(${type * 120}deg, ${50 +
+                i * (50 / regionNo)}%, 60%,100)`;
+            ctx.fillStyle = 'white';
+            members.forEach(n => {
+                ctx.beginPath();
+                const pg = nikPantis.cellPolygon(n);
+
+                ctx.moveTo(...(pg.shift() as Pt));
+                pg.map((p: Pt) => ctx.lineTo(...p));
+                ctx.closePath();
+                ctx.fill();
+                ctx.stroke();
+            });
+        });
+    });
+    if (frameCount === 300) console.log(regions);
     while (!startAgain && count < 64) {
         count++;
         const nxt = myPts.next();

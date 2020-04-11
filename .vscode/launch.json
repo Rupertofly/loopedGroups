@@ -12,6 +12,7 @@
             "webRoot": "${workspaceFolder}",
             "sourceMapPathOverrides": {
                 "../src/*": "${webRoot}/src/*",
+                "/__parcel_source_root/*": "${webRoot}/test/*",
                 "../node_modules/*": "${webRoot}/node_modules/*"
             }
         }

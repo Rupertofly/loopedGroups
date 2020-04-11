@@ -20,12 +20,12 @@ export function getRegions<T, U>(
         disjointSet.union(left, right);
     }
     const regionSets = disjointSet.groups();
-    const outputMap = new Map<U, Region<T, U>[]>();
+    const outputMap = new Map<U, Region<number, U>[]>();
 
     for (const [regionID, set] of regionSets.entries()) {
         const type = getType(set[0]);
-        const region: Region<T, U> = {
-            members: set.map(d => list[d]),
+        const region: Region<number, U> = {
+            members: set,
             regionID,
             type
         };
