@@ -3,7 +3,7 @@ import * as d from 'd3-delaunay';
 import * as ge from '../src/getEdges';
 import { getEdges } from '../src/getEdges';
 import { Edge, Pt as pt } from '../src/global';
-import { getRegions } from '../src/getRegions';
+import { getRegions, outputTable } from '../src/getRegions';
 
 import * as CAP from '@rupertofly/capture-client';
 import Vic from 'victor';
@@ -138,6 +138,8 @@ let buildCount = -1;
 //     maxLength: 3000,
 //     name: 'grid'
 // });
+let regionTable: Map<number, number>;
+
 function renderFrame() {
     frameCount++;
     ctx.lineWidth = 8;
@@ -154,12 +156,8 @@ function renderFrame() {
 
             pts[i].pt = newPT;
         }
-        regions = getRegions<any, number>(
-            pts,
-            nikPantis,
-            (d, i, a) => a[i].type
-        );
-
+        regions = getRegions<Cell, number>(pts, nikPantis, (d, i, a) => d.type);
+        regionTable = outputTable(regions, pts);
         myPts = getEdges(nikPantis);
         regions.forEach((regions, type) => {
             const regionNo = regions.length;
@@ -207,10 +205,12 @@ function renderFrame() {
         if (nxt.done) startAgain = true;
         const ed = nxt.value as Edge;
 
-        if (
-            ed &&
-            (ed.isBoundary || pts[ed.left]?.type !== pts[ed.right]?.type)
-        ) {
+        // debugger;
+
+        if (!ed) continue;
+        const [l, r] = [ed.left, ed.right];
+
+        if (ed.isBoundary || regionTable.get(l) !== regionTable.get(r)) {
             ctx.strokeStyle = `hsl(${(frameCount * 2) % 360}deg, 90%, ${
                 buildCount % 2 ? 60 : 20
             }%)`;
