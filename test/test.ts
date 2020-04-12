@@ -167,7 +167,6 @@ function renderFrame() {
             regions.forEach(({ members }, i) => {
                 ctx.fillStyle = `hsla(${type * 120}deg, ${50 +
                     i * (50 / regionNo)}%, 60%,100)`;
-                ctx.fillStyle = 'white';
                 members.forEach(n => {
                     ctx.beginPath();
                     const pg = nikPantis.cellPolygon(n);
@@ -176,7 +175,6 @@ function renderFrame() {
                     pg.map((p: Pt) => ctx.lineTo(...p));
                     ctx.closePath();
                     ctx.fill();
-                    ctx.stroke();
                 });
             });
         });
@@ -184,26 +182,25 @@ function renderFrame() {
     let count = 0;
 
     // debugger;
-    regions.forEach((regions, type) => {
-        const regionNo = regions.length;
+    // regions.forEach((regions, type) => {
+    //     const regionNo = regions.length;
 
-        regions.forEach(({ members }, i) => {
-            ctx.fillStyle = `hsla(${type * 120}deg, ${50 +
-                i * (50 / regionNo)}%, 60%,100)`;
-            members.forEach(n => {
-                ctx.beginPath();
-                const pg = nikPantis.cellPolygon(n);
+    //     regions.forEach(({ members }, i) => {
+    //         ctx.fillStyle = `hsla(${type * 120}deg, ${50 +
+    //             i * (50 / regionNo)}%, 60%,100)`;
+    //         members.forEach(n => {
+    //             ctx.beginPath();
+    //             const pg = nikPantis.cellPolygon(n);
 
-                ctx.moveTo(...(pg.shift() as Pt));
-                pg.map((p: Pt) => ctx.lineTo(...p));
-                ctx.closePath();
-                ctx.fill();
-                ctx.stroke();
-            });
-        });
-    });
+    //             ctx.moveTo(...(pg.shift() as Pt));
+    //             pg.map((p: Pt) => ctx.lineTo(...p));
+    //             ctx.closePath();
+    //             ctx.fill();
+    //         });
+    //     });
+    // });
     if (frameCount === 300) console.log(regions);
-    while (!startAgain && count < 64) {
+    while (!startAgain && count < 6) {
         count++;
         const nxt = myPts.next();
 
