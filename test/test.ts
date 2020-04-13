@@ -3,7 +3,7 @@ import * as d from 'd3-delaunay';
 import * as ge from '../src/getEdges';
 import { getEdges } from '../src/getEdges';
 import { Edge, Pt as pt } from '../src/global';
-import { getRegions } from '../src/getRegions';
+import { getRegions, outputTable } from '../src/getRegions';
 
 import * as CAP from '@rupertofly/capture-client';
 import Vic from 'victor';
@@ -138,6 +138,8 @@ let buildCount = -1;
 //     maxLength: 3000,
 //     name: 'grid'
 // });
+let regionTable: Map<number, number>;
+
 function renderFrame() {
     frameCount++;
     ctx.lineWidth = 8;
@@ -156,12 +158,8 @@ function renderFrame() {
 
             pts[i].pt = newPT;
         }
-        regions = getRegions<any, number>(
-            pts,
-            nikPantis,
-            (d, i, a) => a[i].type
-        );
-
+        regions = getRegions<Cell, number>(pts, nikPantis, (d, i, a) => d.type);
+        regionTable = outputTable(regions, pts);
         myPts = getEdges(nikPantis);
         regions.forEach((regions, type) => {
             const regionNo = regions.length;

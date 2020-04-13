@@ -5,5 +5,8 @@
     },
     "browserslist": [
         "last 2 Chrome versions"
-    ]
+    ],
+    "dependencies": {
+        "victor": "^1.1.0"
+    }
 }
