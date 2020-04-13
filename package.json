@@ -18,7 +18,7 @@
         "eslint-config-prettier": "^6.10.0",
         "eslint-plugin-prettier": "^3.1.2",
         "eslint-plugin-tsdoc": "^0.2.3",
-        "parcel": "^2.0.0-nightly.207",
+        "parcel": "^1.12.4",
         "prettier": "^1.19.1",
         "typescript": "^3.8.3",
         "victor": "^1.1.0"
@@ -35,7 +35,8 @@
         "last 2 Chrome versions"
     ],
     "scripts": {
-        "test": "parcel test/test.html --open --no-cache",
+        "test": "parcel serve test/test.html --log-level verbose",
+        "chromium": "/Applications/Chromium.app/Contents/MacOS/chromium --remote-debugging-port=9222 --app=\"http://localhost:1234/test.html\"",
         "build": "tsc"
     }
 }

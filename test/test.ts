@@ -15,18 +15,18 @@ const pts: Cell[] = [];
 
 for (let i = 0; i < 256; i++) {
     pts.push({
-        pt: [144 + Math.random() * 288, 268 + Math.random() * 444],
+        pt: [Math.random() * 400, Math.random() * 400],
         type: Math.floor(Math.random() * 2)
     });
 }
 let diag: d.Delaunay<Cell> = d.Delaunay.from(pts.map(d => d.pt));
-let nikPantis = diag.voronoi([5, 5, 715, 1275]);
+let nikPantis = diag.voronoi([5, 5, 630, 470]);
 let regions = getRegions<any, number>(pts, nikPantis, (d, i, a) => a[i].type);
 
 const cv = document.createElement('canvas');
 
-cv.width = 720;
-cv.height = 1280;
+cv.width = 640;
+cv.height = 480;
 const ctx = cv.getContext('2d');
 // const capClient = new CAP.CaptureClient(4646, cv);
 
@@ -146,9 +146,11 @@ function renderFrame() {
         buildCount++;
         startAgain = false;
         diag = d.Delaunay.from(pts.map(d => d.pt));
-        nikPantis = diag.voronoi([5, 5, 715, 1275]);
+        nikPantis = diag.voronoi([5, 5, 630, 470]);
         for (let i = 0; i < pts.length; i++) {
             const pg = nikPantis.cellPolygon(i);
+
+            if (!pg) continue;
             const cx = centroid(pg as pt[]);
             const newPT = pts[i].pt.map((v, j) => v + (cx[j] - v)) as pt;
 
@@ -171,10 +173,11 @@ function renderFrame() {
                     ctx.beginPath();
                     const pg = nikPantis.cellPolygon(n);
 
-                    ctx.moveTo(...(pg.shift() as Pt));
-                    pg.map((p: Pt) => ctx.lineTo(...p));
-                    ctx.closePath();
-                    ctx.fill();
+                    if (!pg) return;
+                    // ctx.moveTo(...(pg.shift() as Pt));
+                    // pg.map((p: Pt) => ctx.lineTo(...p));
+                    // ctx.closePath();
+                    // ctx.fill();
                 });
             });
         });
@@ -200,24 +203,36 @@ function renderFrame() {
     //     });
     // });
     if (frameCount === 300) console.log(regions);
-    while (!startAgain && count < 6) {
+    while (!startAgain && count < 16) {
         count++;
         const nxt = myPts.next();
 
         if (nxt.done) startAgain = true;
+        nxt.done && console.log('nxt: ', nxt);
         const ed = nxt.value as Edge;
 
-        if (
-            ed &&
-            (ed.isBoundary || pts[ed.left]?.type !== pts[ed.right]?.type)
-        ) {
-            ctx.strokeStyle = `hsl(${(frameCount * 2) % 360}deg, 90%, ${
-                buildCount % 2 ? 60 : 20
-            }%)`;
-            ctx.beginPath();
-            ctx.moveTo(...ed.line[0]);
-            ctx.lineTo(...ed.line[1]);
-            ctx.stroke();
+        if (ed) {
+            const [lt, rt] = [pts[ed.left ?? 99], pts[ed.right ?? 99]];
+
+            if (lt.type !== rt.type || ed.isBoundary) {
+                ctx.strokeStyle = `hsl(${(frameCount * 2) % 360}deg, 90%, ${
+                    buildCount % 2 ? 60 : 20
+                }%)`;
+                ctx.beginPath();
+                ctx.moveTo(...ed.line[0]);
+                ctx.lineTo(...ed.line[1]);
+                // if (!ed.isBoundary) {
+                //     ctx.lineTo(...pts[ed.left].pt);
+                //     ctx.closePath();
+                // }
+                ctx.stroke();
+                // if (ed.isBoundary) continue;
+                // const lcx = centroid([...ed.line, pts[ed.left].pt]);
+
+                // ctx.beginPath();
+                // ctx.ellipse(lcx[0], lcx[1], 1, 1, 0, 0, Math.PI);
+                // ctx.stroke();}
+            }
         }
     }
     // for (const ed of render(nikPantis)) {

@@ -143,8 +143,9 @@ export function* getEdges(vor: Voronoi<any>): Generator<Edge, void, unknown> {
         if (edgeLine) {
             const ed = {
                 line: edgeLine,
-                left: Math.floor(triangles[j] / 2),
-                right: Math.floor(triangles[i] / 2),
+                left: Math.floor(triangles[j] / 1),
+                right: Math.floor(triangles[i] / 1),
+
                 isBoundary: false
             } as Edge;
 
@@ -170,8 +171,8 @@ export function* getEdges(vor: Voronoi<any>): Generator<Edge, void, unknown> {
             if (edgeLine) {
                 const edge = {
                     line: edgeLine,
-                    left: Math.floor(currentIndex / 2),
-                    right: Math.floor(prevIndex / 2),
+                    left: currentIndex,
+                    right: prevIndex,
                     isBoundary: false
                 } as Edge;
 

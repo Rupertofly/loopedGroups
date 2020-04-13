@@ -16,6 +16,18 @@
                 "/__parcel_source_root/*": "${webRoot}/test/*",
                 "../node_modules/*": "${webRoot}/node_modules/*"
             }
+        },
+        {
+            "type": "chrome",
+            "port": 9222,
+            "request": "attach",
+            "name": "Attach to Chrome",
+            "webRoot": "${workspaceFolder}",
+            "sourceMapPathOverrides": {
+                "../src/*": "${webRoot}/src/*",
+                "/__parcel_source_root/*": "${webRoot}/test/*",
+                "../node_modules/*": "${webRoot}/node_modules/*"
+            }
         }
     ]
 }
