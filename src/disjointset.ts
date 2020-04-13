@@ -1,18 +1,15 @@
-export class DisjointSet<T> {
+export class DisjointSet {
     // #region Properties (3)
 
     public parents: number[] = [];
     public rank: number[] = [];
-    public sourceObjects: Map<number, T>;
+    public sourceObjects: Map<number, number>;
 
     // #endregion Properties (3)
 
     // #region Constructors (1)
 
-    constructor(source: T[], idAccessor: (data: T) => number) {
-        this.sourceObjects = new Map<number, T>(
-            source.map(d => [idAccessor(d), d])
-        );
+    constructor(source: any[], idAccessor: (data: number) => number) {
         this.sourceObjects.forEach((t, k) => {
             this.parents[k] = k;
             this.rank[k] = 1;
@@ -40,7 +37,7 @@ export class DisjointSet<T> {
     }
 
     public groups() {
-        const outputMap = new Map<number, T[]>();
+        const outputMap = new Map<number, number[]>();
 
         this.sourceObjects.forEach((data, key) => {
             const group = this.find(key);

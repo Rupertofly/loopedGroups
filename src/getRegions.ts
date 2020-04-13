@@ -38,18 +38,17 @@ export function getRegions<T, U>(
 
     return outputMap;
 }
-export function outputTable(
-    groups: Map<any, Region<number, any>[]>,
-    list: any[]
-): Map<number, number> {
-    const output = new Map<number, number>();
+export function outputTable<U>(
+    groups: Map<U, Region<number, U>[]>
+): Map<number, { groupID: number; type: U }> {
+    const output = new Map<number, { groupID: number; type: U }>();
 
-    for (const group of groups)
-        for (const region of group[1]) {
+    for (const [type, regions] of groups)
+        for (const region of regions) {
             const regID = region.regionID;
 
             for (const member of region.members) {
-                output.set(member, regID);
+                output.set(member, { groupID: regID, type });
             }
         }
 

@@ -11,9 +11,13 @@ interface Cell {
     pt: Pt;
     type: number;
 }
+interface RegionIdentity<U> {
+    groupID: number;
+    type: U;
+}
 const pts: Cell[] = [];
 
-for (let i = 0; i < 256; i++) {
+for (let i = 0; i < 1024; i++) {
     pts.push({
         pt: [Math.random() * 400, Math.random() * 400],
         type: Math.floor(Math.random() * 2)
@@ -28,7 +32,7 @@ const cv = document.createElement('canvas');
 cv.width = 640;
 cv.height = 480;
 const ctx = cv.getContext('2d');
-// const capClient = new CAP.CaptureClient(4646, cv);
+const capClient = new CAP.CaptureClient(4646, cv);
 
 ctx.fillStyle = '#000000';
 
@@ -132,17 +136,17 @@ let startAgain = true;
 let frameCount = 0;
 let buildCount = -1;
 
-// capClient.start({
-//     frameRate: 60,
-//     lengthIsFrames: true,
-//     maxLength: 3000,
-//     name: 'grid'
-// });
-let regionTable: Map<number, number>;
+capClient.start({
+    frameRate: 60,
+    lengthIsFrames: true,
+    maxLength: 3000,
+    name: 'grid'
+});
+let regionTable: Map<number, RegionIdentity<number>>;
 
 function renderFrame() {
     frameCount++;
-    ctx.lineWidth = 8;
+    ctx.lineWidth = 3;
     ctx.lineCap = 'round';
     if (startAgain) {
         buildCount++;
@@ -159,7 +163,7 @@ function renderFrame() {
             pts[i].pt = newPT;
         }
         regions = getRegions<Cell, number>(pts, nikPantis, (d, i, a) => d.type);
-        regionTable = outputTable(regions, pts);
+        regionTable = outputTable(regions);
         myPts = getEdges(nikPantis);
         regions.forEach((regions, type) => {
             const regionNo = regions.length;
@@ -202,6 +206,10 @@ function renderFrame() {
     // });
     if (frameCount === 300) console.log(regions);
     while (!startAgain && count < 16) {
+        const regionIDlen = Math.max(
+            ...[...regionTable.values()].map(d => d.groupID)
+        );
+
         count++;
         const nxt = myPts.next();
 
@@ -210,9 +218,17 @@ function renderFrame() {
         const ed = nxt.value as Edge;
 
         if (ed) {
-            const [lt, rt] = [pts[ed.left ?? 99], pts[ed.right ?? 99]];
+            const shouldDraw = ed.isBoundary
+                ? true
+                : regionTable.get(ed.left) !== regionTable.get(ed.right);
 
-            if (lt.type !== rt.type || ed.isBoundary) {
+            if (shouldDraw) {
+                const rReg = regionTable.get(ed.right).groupID;
+                const lReg = ed.isBoundary
+                    ? 99999
+                    : regionTable.get(ed.right).groupID;
+                const reg = Math.min(lReg, rReg);
+
                 ctx.strokeStyle = `hsl(${(frameCount * 2) % 360}deg, 90%, ${
                     buildCount % 2 ? 60 : 20
                 }%)`;
@@ -270,6 +286,10 @@ function renderFrame() {
     //         // ctx.stroke();
     //     }
     // }
-    window.requestAnimationFrame(renderFrame);
+    if (capClient) {
+        capClient
+            .capture()
+            .then(() => window.requestAnimationFrame(renderFrame));
+    } else window.requestAnimationFrame(renderFrame);
 }
 renderFrame();

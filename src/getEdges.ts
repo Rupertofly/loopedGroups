@@ -1,12 +1,31 @@
-import { Voronoi, Delaunay } from 'd3-delaunay';
-import { Extent, Line, Pt, Loop, Edge } from './global';
+import { Voronoi } from 'd3-delaunay';
+import { Edge, Extent, Line, Pt } from './global';
 import HullSegmenter from './HullSegmenter';
+/**
+ * gets the region code of a point
+ * @param x - x positon
+ * @param y - y position
+ * @param ext - extent
+ */
 function regioncode(x: number, y: number, [xmin, ymin, xmax, ymax]: Extent) {
     return (
         (x < xmin ? 0b0001 : x > xmax ? 0b0010 : 0b0000) |
         (y < ymin ? 0b0100 : y > ymax ? 0b1000 : 0b0000)
     );
 }
+
+/**
+ * clips a segment to an extent
+ *
+ * @param x0 -
+ * @param y0 -
+ * @param x1 -
+ * @param y1 -
+ * @param c0 -
+ * @param c1 -
+ * @param ex -
+ * @returns
+ */
 function clipSegment(
     x0: number,
     y0: number,
@@ -15,7 +34,7 @@ function clipSegment(
     c0: number,
     c1: number,
     ex: Extent
-) {
+): [number, number, number, number] | null {
     const [xmin, ymin, xmax, ymax] = ex;
 
     while (true) {
@@ -82,7 +101,7 @@ function projectEdge(
     vx: number,
     vy: number,
     ex: Extent
-) {
+): Pt | null {
     const [xmin, ymin, xmax, ymax] = ex;
     let t = Infinity;
     let c: number;
@@ -117,6 +136,13 @@ function projectEdge(
     return [x, y];
 }
 
+/**
+ * Returns an iterator over all edges in the voronoi diagram, eacg edge consists of a line, cell indexs of both it's left and right side, and a boolean of whether the edge is on the border (and has only one neighbouring cell)
+ *
+ *
+ * @param vor - d3-delauny voronoi diagram
+ * @returns iterator over edges
+ */
 export function* getEdges(vor: Voronoi<any>): Generator<Edge, void, unknown> {
     const {
         delaunay: { halfedges, inedges, hull: hll, triangles },
@@ -126,6 +152,15 @@ export function* getEdges(vor: Voronoi<any>): Generator<Edge, void, unknown> {
     const hull: Float32Array = hll as any;
     const extent: Extent = [vor.xmin, vor.ymin, vor.xmax, vor.ymax];
     const hullSegmentSolver = new HullSegmenter(extent);
+
+    function createInnerEdge(edgeLine: Line, j: number, i: number) {
+        return {
+            line: edgeLine,
+            left: Math.floor(triangles[j]),
+            right: Math.floor(triangles[i]),
+            isBoundary: false
+        } as Edge;
+    }
 
     if (hull.length <= 1) return null;
     for (let i = 0, n = halfedges.length; i < n; ++i) {
@@ -141,13 +176,7 @@ export function* getEdges(vor: Voronoi<any>): Generator<Edge, void, unknown> {
         const edgeLine = processLine(xi, yi, xj, yj, extent);
 
         if (edgeLine) {
-            const ed = {
-                line: edgeLine,
-                left: Math.floor(triangles[j] / 1),
-                right: Math.floor(triangles[i] / 1),
-
-                isBoundary: false
-            } as Edge;
+            const ed = createInnerEdge(edgeLine, j, i);
 
             hullSegmentSolver.addEdge(ed);
             yield ed;
