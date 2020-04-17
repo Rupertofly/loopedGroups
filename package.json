@@ -18,12 +18,13 @@
         "eslint-config-prettier": "^6.10.0",
         "eslint-plugin-prettier": "^3.1.2",
         "eslint-plugin-tsdoc": "^0.2.3",
-        "parcel": "^1.12.4",
+        "parcel": "next",
         "prettier": "^1.19.1",
         "typescript": "^3.8.3",
         "victor": "^1.1.0"
     },
     "dependencies": {
+        "@rupertofly/h": "^0.9.7",
         "d3-delaunay": "^5.2.1"
     },
     "prettier": {
@@ -35,8 +36,9 @@
         "last 2 Chrome versions"
     ],
     "scripts": {
-        "test": "parcel serve test/test.html --log-level verbose",
+        "test": "yarn parcel serve test/test.html",
         "chromium": "/Applications/Chromium.app/Contents/MacOS/chromium --remote-debugging-port=9222 --app=\"http://localhost:1234/test.html\"",
-        "build": "tsc"
+        "build": "tsc",
+        "parcelV": "parcel -V"
     }
 }

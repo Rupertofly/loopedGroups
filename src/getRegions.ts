@@ -2,15 +2,44 @@ import DisjointSet from './disjointset';
 import { Voronoi } from 'd3-delaunay';
 import { getEdges } from './getEdges';
 import { Edge } from 'global';
-import { Region } from './global';
-export function getRegions<T, U>(
-    list: T[],
-    graph: Voronoi<T>,
-    acc: (d: T, i: number, a: T[]) => U
+import { Region, RegionMap } from './global';
+export class RegionList<CellType = number, CategoryType = number> extends Map<
+    CategoryType,
+    RegionMap<CellType, CategoryType>
+> {
+    constructor() {
+        super();
+    }
+    add(region: Region<CellType, CategoryType>) {
+        const { type, regionID } = region;
+
+        if (this.has(type)) {
+            const typeMap = this.get(type);
+
+            typeMap.set(regionID, region);
+        } else {
+            this.set(type, new Map([[regionID, region]]));
+        }
+    }
+    getRegion(cellIndex: CellType) {
+        for (const [type, typeGroups] of this) {
+            for (const [regID, region] of typeGroups) {
+                if (region.members.includes(cellIndex)) return region;
+            }
+        }
+
+        return undefined;
+    }
+}
+export function getRegions<CellType = number, CategoryType = number>(
+    list: CellType[],
+    graph: Voronoi<CellType>,
+    acc: (d: CellType, i: number, a: CellType[]) => CategoryType
 ) {
     const iArr = list.map((d, i) => i);
     const disjointSet = new DisjointSet(iArr, d => d);
     const getType = (n: number) => acc(list[n], n, list);
+    const regionlist = new RegionList<number, CategoryType>();
 
     for (const i of iArr) {
         for (const j of graph.delaunay.neighbors(i)) {
@@ -19,38 +48,18 @@ export function getRegions<T, U>(
         }
     }
     const regionSets = disjointSet.groups();
-    const outputMap = new Map<U, Region<number, U>[]>();
+    const outputMap = new Map<CategoryType, Region<number, CategoryType>[]>();
 
     for (const [regionID, set] of regionSets.entries()) {
         const type = getType(set[0]);
-        const region: Region<number, U> = {
+        const region: Region<number, CategoryType> = {
             members: set,
             regionID,
             type
         };
 
-        if (outputMap.has(type)) {
-            outputMap.get(type).push(region);
-        } else {
-            outputMap.set(type, [region]);
-        }
+        regionlist.add(region);
     }
 
-    return outputMap;
-}
-export function outputTable<U>(
-    groups: Map<U, Region<number, U>[]>
-): Map<number, { groupID: number; type: U }> {
-    const output = new Map<number, { groupID: number; type: U }>();
-
-    for (const [type, regions] of groups)
-        for (const region of regions) {
-            const regID = region.regionID;
-
-            for (const member of region.members) {
-                output.set(member, { groupID: regID, type });
-            }
-        }
-
-    return output;
+    return regionlist;
 }

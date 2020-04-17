@@ -3,13 +3,14 @@ export class DisjointSet {
 
     public parents: number[] = [];
     public rank: number[] = [];
-    public sourceObjects: Map<number, number>;
+    public sourceObjects: Map<number, number> = new Map();
 
     // #endregion Properties (3)
 
     // #region Constructors (1)
 
     constructor(source: any[], idAccessor: (data: number) => number) {
+        this.sourceObjects = new Map(source.map((d, i) => [d, i]));
         this.sourceObjects.forEach((t, k) => {
             this.parents[k] = k;
             this.rank[k] = 1;

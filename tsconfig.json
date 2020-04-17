@@ -4,14 +4,15 @@
         "outDir": "./dist",
         "target": "ES2018",
         "jsx": "react",
-        "importHelpers": true,
+        "importHelpers": false,
         "moduleResolution": "node",
         "esModuleInterop": true,
         "sourceMap": true,
         "emitDecoratorMetadata": true,
         "experimentalDecorators": true,
         "lib": ["ESNext", "ES2019", "DOM"],
-        "declaration": true
+        "declaration": true,
+        "strict": true
     },
     "typeAcquisition": { "enable": true },
     "include": ["src"]
