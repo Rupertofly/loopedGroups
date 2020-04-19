@@ -11,9 +11,11 @@
         "@rupertofly/capture": "^0.9.4",
         "@rupertofly/capture-client": "^1.1.1",
         "@types/d3-delaunay": "^4.1.0",
+        "@types/d3-polygon": "^1.0.7",
         "@types/victor": "^1.1.0",
         "@typescript-eslint/eslint-plugin": "^2.24.0",
         "@typescript-eslint/parser": "^2.24.0",
+        "d3-polygon": "^1.0.6",
         "eslint": "^6.8.0",
         "eslint-config-prettier": "^6.10.0",
         "eslint-plugin-prettier": "^3.1.2",
@@ -36,7 +38,7 @@
         "last 2 Chrome versions"
     ],
     "scripts": {
-        "test": "yarn parcel serve test/test.html",
+        "test": "yarn parcel serve test/test.html --no-cache",
         "chromium": "/Applications/Chromium.app/Contents/MacOS/chromium --remote-debugging-port=9222 --app=\"http://localhost:1234/test.html\"",
         "build": "tsc",
         "parcelV": "parcel -V"

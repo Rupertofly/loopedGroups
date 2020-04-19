@@ -1,7 +1,8 @@
 import GD from './GraphDiagram';
-import { Edge, RegionMap } from './global';
+import { RegionList } from './getRegions';
+import { Edge, RegionEdges, Region, Point, Loop, Line } from './global';
 function matchNum(a: number, b: number) {
-    const EPSILON = 1e-9;
+    const EPSILON = 1e-14;
 
     return Math.abs(a - b) < EPSILON;
 }
@@ -9,27 +10,42 @@ function matchNum(a: number, b: number) {
 type point = [number, number];
 type cellEdge = GD.edge<any>;
 type loop = point[];
+let isBoundary = false;
 
-function matchPoint(a: point, b: point) {
+isBoundary = false;
+function matchPoint(a: Point, b: Point) {
     return matchNum(a[0], b[0]) && matchNum(a[1], b[1]);
 }
 function matchPointHof(a: point) {
     return (b: Edge) => matchPoint(a, b.line[0]);
 }
-function flip(edge: Edge): Edge {
+function flip(edge: Edge<false>): Edge<false> {
     const { line, isBoundary } = edge;
+    const newLine: Line = [line[1], line[0]];
     const temp = edge.right;
     const right = edge.left;
     const left = temp;
 
-    return { line, left, right, isBoundary };
+    return {
+        line: newLine,
+        right: edge.left,
+        left: edge.right,
+        isBoundary: edge.isBoundary
+    };
 }
-function orientEdge<U>(edge: Edge, test: (a: Edge) => boolean): Edge {
+function orientEdge(edge: Edge, test: (a: Edge) => boolean): Edge {
     if (test(edge)) {
-        // flip edge
-        return flip(edge);
-    } else {
         return edge;
+    } else {
+        const { isBoundary } = edge;
+
+        if (isBoundary === true)
+            throw new Error(
+                `yo your test is fucked ${test.toString()} fucks up because it should never need to flip a boundary`
+            );
+        else {
+            return flip(edge as Edge<typeof isBoundary>);
+        }
     }
 }
 function orientEdges(edges: Edge[], test: (a: Edge) => boolean): Edge[] {
@@ -39,7 +55,15 @@ function orientEdges(edges: Edge[], test: (a: Edge) => boolean): Edge[] {
         if (test(edge)) {
             output.push(edge);
         } else {
-            output.push(flip(edge));
+            const { isBoundary } = edge;
+
+            if (isBoundary === true)
+                throw new Error(
+                    `yo your test is fucked ${test.toString()} fucks up because it should never need to flip a boundary`
+                );
+            else {
+                output.push(flip(edge as Edge<typeof isBoundary>));
+            }
         }
     }
 
@@ -49,65 +73,142 @@ const nextPointHof = (a: Edge) => {
     return (b: Edge) => matchPoint(a.line[1], b.line[0]);
 };
 
+export class EdgeGroup<T = number, U = number> extends Array<Edge> {
+    region: Region<T, U>;
+    get regionID() {
+        return this.region.regionID;
+    }
+    get type() {
+        return this.region.type;
+    }
+    has(i: T) {
+        return this.region.members.includes(i);
+    }
+    constructor(region: Region<T, U>) {
+        super();
+        this.region = region;
+    }
+}
 export function groupEdges<T, U>(
     edgeIterator: Iterable<Edge>,
-    regions: RegionMap<T, U>
+    regions: RegionList<number, U>
 ) {
-    const regionDict = outputTable(regions);
-    const edgeGroups = new Map<number, Edge[]>();
+    const edgeGroups = new Map<number, EdgeGroup<number, U>>();
     const addEdge = (e: Edge, n: number) => {
-        const gID = regionDict.get(n).groupID;
+        const region = regions.getRegion(n);
 
-        if (edgeGroups.has(gID)) edgeGroups.get(gID)?.push(e);
-        else edgeGroups.set(gID, [e]);
+        if (region == undefined) return;
+        const regionID = region.regionID;
+        let eG = edgeGroups.get(regionID);
+
+        if (eG) eG.push(e);
+        else {
+            eG = new EdgeGroup<number, U>(region);
+            eG.push(e);
+            edgeGroups.set(eG.regionID, eG);
+        }
     };
 
     for (const edge of edgeIterator) {
         if (!edge) continue;
-        addEdge(edge, edge.right || 0);
-        if (edge.isBoundary === false) addEdge(flip(edge), edge.left);
+        const rRight = regions.getRegion(edge.right);
+
+        if (edge.isBoundary == false) {
+            const rLeft = regions.getRegion(edge.left);
+
+            if (rRight === rLeft) continue;
+        }
+
+        addEdge(edge, edge.right!);
+        if (edge.isBoundary === false)
+            addEdge(flip(edge as Edge<false>), edge.left);
     }
 
     return edgeGroups;
 }
-export function hullsFromGroup(
-    regionEdges: Map<number, Edge[]>,
-    groupTable: Map<number, { groupID: number; type: any }>
-) {
-    const hulls = new Map<number, loop[]>();
-    const addLoop = (lp: loop, id: number) =>
-        hulls.has(id) ? hulls.get(id).push(lp) : hulls.set(id, [lp]);
-    const table = groupTable;
+export function unvisitedEdges<U>(edgeGroup: EdgeGroup<number, U>): Edge[] {
+    const output: Edge[] = [];
 
-    for (const [eID, edges] of regionEdges) {
-        const unvisitedEdges = orientEdges(
-            edges.slice(),
-            e => table.get(e.right).groupID === eID
-        );
+    for (const edge of edgeGroup) {
+        const orientedEdge = orientEdge(edge, e => edgeGroup.has(e.right));
 
-        while (unvisitedEdges.length > 0) {
-            const firstPoint = unvisitedEdges.shift()!;
-            const start = firstPoint.line[0];
-            const lp = [start];
-            let thisPt: point;
-            let next = firstPoint.line[1] as point;
+        output.push(orientedEdge);
+    }
 
-            do {
-                const edgeMatcher = matchPointHof(next);
-                const nextEdgeI = unvisitedEdges.findIndex(e =>
-                    matchPoint(e.line[0], next)
-                );
+    return output;
+}
+export function hullsFromGroup(edgeGroup: EdgeGroup<number, any>): Loop[] {
+    const hulls: Loop[] = [];
+    const remainingEdges = edgeGroup.slice(0);
+    const visitedEdges: Edge[] = [];
 
-                if (nextEdgeI < 0) break;
-                [thisPt, next] = unvisitedEdges.splice(nextEdgeI, 1)[0].line;
-                lp.push(thisPt);
-            } while (unvisitedEdges.length > 0 && !matchPoint(start, next));
-            addLoop(lp, eID);
+    while (remainingEdges.length > 0) {
+        const startingEdge = remainingEdges.shift();
+        let thisPoint: Point;
+        let nextPoint: Point;
+
+        if (startingEdge == undefined) break;
+        thisPoint = startingEdge.line[0];
+        nextPoint = startingEdge.line[1];
+        const startingPoint = thisPoint;
+        const loop: Loop = [];
+
+        loop.push(startingPoint);
+        while (
+            remainingEdges.length > 0 &&
+            !matchPoint(startingPoint, nextPoint)
+        ) {
+            const nextEdgeIndex = remainingEdges.findIndex(e =>
+                matchPoint(e.line[0], nextPoint)
+            );
+
+            if (nextEdgeIndex < 0) break; // No more matching edges
+            const nextEdge = remainingEdges.splice(nextEdgeIndex, 1)[0];
+
+            if (nextEdge == undefined) break;
+            thisPoint = nextEdge.line[0];
+            nextPoint = nextEdge.line[1];
+            loop.push(thisPoint);
         }
+        if (loop.length > 2) hulls.push(loop);
     }
 
     return hulls;
 }
+// export function hullsFromGroup<T, U>(regionEdges: RegionEdges<T, U>) {
+//     const hulls = new Map<number, loop[]>();
+//     const addLoop = (lp: loop, id: number) =>
+//         hulls.has(id) ? hulls.get(id)!.push(lp) : hulls.set(id, [lp]);
+
+//     for (const edge of regionEdges.edges) {
+//         const unvisitedEdges = orientEdges(
+//             edges.slice(),
+//             e => regionEdges.get(e.right).groupID === eID
+//         );
+
+//         while (unvisitedEdges.length > 0) {
+//             const firstPoint = unvisitedEdges.shift()!;
+//             const start = firstPoint.line[0];
+//             const lp = [start];
+//             let thisPt: point;
+//             let next = firstPoint.line[1] as point;
+
+//             do {
+//                 const edgeMatcher = matchPointHof(next);
+//                 const nextEdgeI = unvisitedEdges.findIndex(e =>
+//                     matchPoint(e.line[0], next)
+//                 );
+
+//                 if (nextEdgeI < 0) break;
+//                 [thisPt, next] = unvisitedEdges.splice(nextEdgeI, 1)[0].line;
+//                 lp.push(thisPt);
+//             } while (unvisitedEdges.length > 0 && !matchPoint(start, next));
+//             addLoop(lp, eID);
+//         }
+//     }
+
+//     return hulls;
+// }
 /* export function hullsFromGroup(
     edges: GD.edge<CellPoint>[],
     type: string,

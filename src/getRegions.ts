@@ -1,7 +1,7 @@
 import DisjointSet from './disjointset';
 import { Voronoi } from 'd3-delaunay';
 import { getEdges } from './getEdges';
-import { Edge } from 'global';
+import { Edge } from './global';
 import { Region, RegionMap } from './global';
 export class RegionList<CellType = number, CategoryType = number> extends Map<
     CategoryType,
@@ -14,7 +14,7 @@ export class RegionList<CellType = number, CategoryType = number> extends Map<
         const { type, regionID } = region;
 
         if (this.has(type)) {
-            const typeMap = this.get(type);
+            const typeMap = this.get(type)!;
 
             typeMap.set(regionID, region);
         } else {

@@ -1,4 +1,4 @@
-import { Loop, Pt, Extent, Edge } from './global';
+import { Loop, Point, Extent, Edge } from './global';
 interface Boundary {
     pt: number;
     before?: number;
@@ -32,7 +32,7 @@ const bundleEdges = (
                           [st.pt, constant],
                           [ed.pt, constant]
                       ]
-        });
+        } as Edge<true>);
     }
 
     return edges;

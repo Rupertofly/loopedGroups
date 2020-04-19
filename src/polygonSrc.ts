@@ -1,5 +1,5 @@
 import { Voronoi, Delaunay } from 'd3-delaunay';
-import { Extent, Line, Pt, Loop, Edge } from './global';
+import { Extent, Line, Point, Loop, Edge } from './global';
 import HullSegmenter from './HullSegmenter';
 function regioncode(x: number, y: number, [xmin, ymin, xmax, ymax]: Extent) {
     return (

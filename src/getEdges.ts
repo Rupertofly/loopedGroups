@@ -1,5 +1,5 @@
 import { Voronoi } from 'd3-delaunay';
-import { Edge, Extent, Line, Pt } from './global';
+import { Edge, Extent, Line, Point } from './global';
 import HullSegmenter from './HullSegmenter';
 /**
  * gets the region code of a point
@@ -101,12 +101,12 @@ function projectEdge(
     vx: number,
     vy: number,
     ex: Extent
-): Pt | null {
+): Point | null {
     const [xmin, ymin, xmax, ymax] = ex;
     let t = Infinity;
     let c: number;
-    let x: number;
-    let y: number;
+    let x = 0;
+    let y = 0;
 
     if (vy < 0) {
         // top
@@ -162,7 +162,7 @@ export function* getEdges(vor: Voronoi<any>): Generator<Edge, void, unknown> {
         } as Edge;
     }
 
-    if (hull.length <= 1) return null;
+    if (hull.length <= 1) return;
     for (let i = 0, n = halfedges.length; i < n; ++i) {
         const j = halfedges[i];
 
