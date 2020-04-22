@@ -1,23 +1,15 @@
-import GD from './GraphDiagram';
 import { RegionList } from './getRegions';
-import { Edge, RegionEdges, Region, Point, Loop, Line } from './global';
 function matchNum(a: number, b: number) {
     const EPSILON = 1e-14;
 
     return Math.abs(a - b) < EPSILON;
 }
 
-type point = [number, number];
-type cellEdge = GD.edge<any>;
-type loop = point[];
 let isBoundary = false;
 
 isBoundary = false;
 function matchPoint(a: Point, b: Point) {
     return matchNum(a[0], b[0]) && matchNum(a[1], b[1]);
-}
-function matchPointHof(a: point) {
-    return (b: Edge) => matchPoint(a, b.line[0]);
 }
 function flip(edge: Edge<false>): Edge<false> {
     const { line, isBoundary } = edge;

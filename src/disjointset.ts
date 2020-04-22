@@ -44,7 +44,7 @@ export class DisjointSet {
             const group = this.find(key);
 
             if (!outputMap.has(group)) outputMap.set(group, []);
-            outputMap.get(group).push(data);
+            outputMap.get(group)!.push(data);
         });
 
         return [...outputMap.values()];

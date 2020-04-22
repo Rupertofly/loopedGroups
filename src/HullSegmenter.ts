@@ -1,4 +1,3 @@
-import { Loop, Point, Extent, Edge } from './global';
 interface Boundary {
     pt: number;
     before?: number;

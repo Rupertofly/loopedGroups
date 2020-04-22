@@ -1,8 +1,6 @@
 import DisjointSet from './disjointset';
 import { Voronoi } from 'd3-delaunay';
 import { getEdges } from './getEdges';
-import { Edge } from './global';
-import { Region, RegionMap } from './global';
 export class RegionList<CellType = number, CategoryType = number> extends Map<
     CategoryType,
     RegionMap<CellType, CategoryType>
@@ -48,7 +46,6 @@ export function getRegions<CellType = number, CategoryType = number>(
         }
     }
     const regionSets = disjointSet.groups();
-    const outputMap = new Map<CategoryType, Region<number, CategoryType>[]>();
 
     for (const [regionID, set] of regionSets.entries()) {
         const type = getType(set[0]);
