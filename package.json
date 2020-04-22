@@ -6,6 +6,7 @@
     "author": "Ruby Quail <ruby@rubyquail.design>",
     "license": "MIT",
     "private": false,
+    "types": "types/index.d.ts",
     "devDependencies": {
         "@babel/core": "^7.9.0",
         "@rupertofly/capture": "^0.9.4",
