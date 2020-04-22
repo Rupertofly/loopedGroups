@@ -7,7 +7,6 @@
         "importHelpers": false,
         "moduleResolution": "node",
         "esModuleInterop": true,
-        "sourceMap": true,
         "emitDecoratorMetadata": true,
         "experimentalDecorators": true,
         "lib": ["ESNext", "ES2019", "DOM"],

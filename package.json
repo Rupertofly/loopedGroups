@@ -1,6 +1,6 @@
 {
     "name": "@rupertofly/voronoi-regions",
-    "version": "1.0.0",
+    "version": "0.1.0",
     "main": "dist/index.js",
     "repository": "git@github.com:Rupertofly/voronoi-regions.git",
     "author": "Ruby Quail <ruby@rubyquail.design>",
