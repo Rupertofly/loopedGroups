@@ -1,5 +1,5 @@
 {
-    "name": "@rupertofly/looped-groups",
+    "name": "@rupertofly/voronoi-regions",
     "version": "1.0.0",
     "main": "dist/index.js",
     "repository": "git@github.com:Rupertofly/loopedGroups.git",
@@ -12,6 +12,7 @@
         "@rupertofly/capture-client": "^1.1.1",
         "@types/d3-delaunay": "^4.1.0",
         "@types/d3-polygon": "^1.0.7",
+        "@types/tape": "^4.13.0",
         "@types/victor": "^1.1.0",
         "@typescript-eslint/eslint-plugin": "^2.24.0",
         "@typescript-eslint/parser": "^2.24.0",
@@ -23,14 +24,14 @@
         "js-angusj-clipper": "^1.0.4",
         "parcel": "next",
         "prettier": "^1.19.1",
+        "tape": "^4.13.2",
+        "ts-node": "^8.9.0",
         "typescript": "^3.8.3",
         "victor": "^1.1.0"
     },
     "dependencies": {
-        "@rupertofly/h": "^0.9.7",
-        "@types/jsts": "^0.17.3",
         "d3-delaunay": "^5.2.1",
-        "jsts": "^2.1.2"
+        "tslib": "^1.11.1"
     },
     "prettier": {
         "useTabs": false,
@@ -41,9 +42,9 @@
         "last 2 Chrome versions"
     ],
     "scripts": {
-        "test": "yarn parcel serve test/test.html --no-cache",
+        "webTest": "yarn parcel serve test/test.html --no-cache",
         "chromium": "/Applications/Chromium.app/Contents/MacOS/chromium --remote-debugging-port=9222 --app=\"http://localhost:1234/test.html\"",
         "build": "tsc",
-        "parcelV": "parcel -V"
+        "test": "ts-node test/test.ts"
     }
 }

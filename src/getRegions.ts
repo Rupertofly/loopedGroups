@@ -1,14 +1,24 @@
 import DisjointSet from './disjointset';
 import { Voronoi } from 'd3-delaunay';
-import { getEdges } from './getEdges';
-export class RegionList<CellType = number, CategoryType = number> extends Map<
+
+/**
+ * Class to make interactin with a map of regions easier
+ *
+ */
+export class RegionList<CategoryType = number> extends Map<
     CategoryType,
-    RegionMap<CellType, CategoryType>
+    RegionMap<CategoryType>
 > {
     constructor() {
         super();
     }
-    add(region: Region<CellType, CategoryType>) {
+    /**
+     *  adds a region to the list
+     *
+     * @param region - region to add
+     *
+     */
+    add(region: Region<CategoryType>) {
         const { type, regionID } = region;
 
         if (this.has(type)) {
@@ -19,27 +29,41 @@ export class RegionList<CellType = number, CategoryType = number> extends Map<
             this.set(type, new Map([[regionID, region]]));
         }
     }
-    getRegion(cellIndex: CellType) {
+    /**
+     * get the region of a cell number
+     *
+     * @param cellIndex - index of cell to find what region it is in
+     * @returns the region of undefined if no region is found
+     *
+     */
+    getRegion(cellIndex: number) {
         for (const [type, typeGroups] of this) {
             for (const [regID, region] of typeGroups) {
-                if (region.members.includes(cellIndex)) return region;
+                if (region.members.has(cellIndex)) return region;
             }
         }
 
         return undefined;
     }
 }
-export function getRegions<CellType = number, CategoryType = number>(
-    list: CellType[],
-    graph: Voronoi<CellType>,
-    acc: (d: CellType, i: number, a: CellType[]) => CategoryType
-) {
-    const iArr = list.map((d, i) => i);
-    const disjointSet = new DisjointSet(iArr, d => d);
-    const getType = (n: number) => acc(list[n], n, list);
-    const regionlist = new RegionList<number, CategoryType>();
 
-    for (const i of iArr) {
+/**
+ *  gets a set of regions from a graph
+ *
+ * @param graph - the voronoi graph to check
+ * @param acc - an accessor to get the type information from the graph index
+ * @returns a list of regions
+ */
+export function getRegions<CategoryType = number>(
+    graph: Voronoi<any>,
+    acc: (i: number) => CategoryType
+) {
+    const graphLength = Math.round(graph.delaunay.points.length / 2);
+    const disjointSet = new DisjointSet(new Array(graphLength));
+    const getType = (n: number) => acc(n);
+    const regionlist = new RegionList<CategoryType>();
+
+    for (let i = 0; i < graphLength; i++) {
         for (const j of graph.delaunay.neighbors(i)) {
             if (j < i) continue;
             if (getType(i) === getType(j)) disjointSet.union(i, j);
@@ -49,8 +73,8 @@ export function getRegions<CellType = number, CategoryType = number>(
 
     for (const [regionID, set] of regionSets.entries()) {
         const type = getType(set[0]);
-        const region: Region<number, CategoryType> = {
-            members: set,
+        const region: Region<CategoryType> = {
+            members: new Set(set),
             regionID,
             type
         };

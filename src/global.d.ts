@@ -1,6 +1,7 @@
 declare type Point = [number, number];
 declare type Line = [Point, Point];
 declare type Loop = Point[];
+declare type Shape = Loop[];
 declare type Extent = [number, number, number, number];
 declare type GroupNumber = number;
 declare interface Edge<Boundary extends boolean = boolean> {
@@ -10,17 +11,17 @@ declare interface Edge<Boundary extends boolean = boolean> {
     isBoundary: Boundary;
 }
 
-declare interface Region<CellType = number, CategoryType = number> {
-    members: CellType[];
+declare interface Region<CategoryType = number> {
+    members: Set<number>;
     type: CategoryType;
     regionID: number;
     borderEdges?: Edge[];
 }
-declare type RegionMap<CellType = number, CategoryType = number> = Map<
+declare type RegionMap<CategoryType = number> = Map<
     number,
-    Region<CellType, CategoryType>
+    Region<CategoryType>
 >;
 declare interface RegionEdges<CellType = number, CategoryType = number> {
-    region: Region<CellType, CategoryType>;
+    region: Region<CategoryType>;
     edges: Edge[];
 }

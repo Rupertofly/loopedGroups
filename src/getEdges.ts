@@ -13,18 +13,6 @@ function regioncode(x: number, y: number, [xmin, ymin, xmax, ymax]: Extent) {
     );
 }
 
-/**
- * clips a segment to an extent
- *
- * @param x0 -
- * @param y0 -
- * @param x1 -
- * @param y1 -
- * @param c0 -
- * @param c1 -
- * @param ex -
- * @returns
- */
 function clipSegment(
     x0: number,
     y0: number,
@@ -217,3 +205,4 @@ export function* getEdges(vor: Voronoi<any>): Generator<Edge, void, unknown> {
 
     return;
 }
+export default getEdges;
