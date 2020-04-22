@@ -21,7 +21,7 @@ declare type RegionMap<CategoryType = number> = Map<
     number,
     Region<CategoryType>
 >;
-declare interface RegionEdges<CellType = number, CategoryType = number> {
+declare interface RegionEdges<CategoryType = number> {
     region: Region<CategoryType>;
     edges: Edge[];
 }
