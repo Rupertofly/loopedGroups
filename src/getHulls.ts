@@ -1,4 +1,5 @@
 import { RegionList } from './getRegions';
+import { Point, Edge, Line, Region, Shape, Loop } from './global';
 /**
  * match two numbers to a super small level of uncertainty
  *
@@ -43,7 +44,7 @@ function flip(edge: Edge<false>): Edge<false> {
  * A group of edges, more or less an extension of a set of edges but has some convenience methods for working with the corresponding region
  *
  */
-class EdgeGroup<CellCategory = number> extends Set<Edge> {
+export class EdgeGroup<CellCategory = number> extends Set<Edge> {
     /** corresponding region */
     readonly region: Region<CellCategory>;
     /** Returns the region ID */

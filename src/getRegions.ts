@@ -1,5 +1,6 @@
 import DisjointSet from './disjointset';
 import { Voronoi } from 'd3-delaunay';
+import { Region, RegionMap } from './global';
 
 /**
  * Class to make interactin with a map of regions easier
@@ -59,7 +60,7 @@ export function getRegions<CategoryType = number>(
     acc: (i: number) => CategoryType
 ) {
     const graphLength = Math.round(graph.delaunay.points.length / 2);
-    const disjointSet = new DisjointSet(new Array(graphLength));
+    const disjointSet = new DisjointSet(new Array(graphLength).fill(1));
     const getType = (n: number) => acc(n);
     const regionlist = new RegionList<CategoryType>();
 

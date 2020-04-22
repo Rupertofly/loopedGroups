@@ -10,7 +10,7 @@ export class DisjointSet {
     // #region Constructors (1)
 
     constructor(source: any[]) {
-        this.sourceObjects = new Map(source.map((d, i) => [d, i]));
+        this.sourceObjects = new Map(source.map((d, i) => [i, i]));
         this.sourceObjects.forEach((t, k) => {
             this.parents[k] = k;
             this.rank[k] = 1;

@@ -1,5 +1,6 @@
 import { Voronoi } from 'd3-delaunay';
 import HullSegmenter from './HullSegmenter';
+import { Extent, Line, Point, Edge } from './global';
 /**
  * gets the region code of a point
  * @param x - x positon

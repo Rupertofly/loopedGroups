@@ -1,3 +1,5 @@
+import { Edge, Extent } from './global';
+
 interface Boundary {
     pt: number;
     before?: number;

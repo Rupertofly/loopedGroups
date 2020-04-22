@@ -2,7 +2,7 @@
     "compilerOptions": {
         "module": "commonjs",
         "outDir": "./dist",
-        "target": "ES2018",
+        "target": "es6",
         "jsx": "react",
         "importHelpers": false,
         "moduleResolution": "node",
@@ -12,7 +12,8 @@
         "experimentalDecorators": true,
         "lib": ["ESNext", "ES2019", "DOM"],
         "declaration": true,
-        "strict": true
+        "declarationDir": "types",
+        "strict": false
     },
     "typeAcquisition": { "enable": true },
     "include": ["src"]
